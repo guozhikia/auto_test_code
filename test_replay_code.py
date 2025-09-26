@@ -261,17 +261,18 @@ class TestCode():
                     p0_issue_v2_pass_or_fail = checkers_result["P0_issue_v2"]['error']
                     if not urban_pass_or_fail or p0_issue_v2_pass_or_fail != "":
                         self.check_result[platform]["check_test_result"] = "fail"
-                        send_alert_to_feishu(f"Check test result {platform} failed", f"https://aip.nioint.com/#/adsim/hilReplay/management/details?exec_plan_id={task_id}", case_id, platform, feishu_webhook_url)
+                        # send_alert_to_feishu(f"Check test result {platform} failed", f"https://aip.nioint.com/#/adsim/hilReplay/management/details?exec_plan_id={task_id}", case_id, platform, feishu_webhook_url)
                         break
                     else:
                         self.check_result[platform]["check_test_result"] = "pass"
-                        send_alert_to_feishu(f"Check test result {platform} pass", f"https://aip.nioint.com/#/adsim/hilReplay/management/details?exec_plan_id={task_id}", case_id, platform, feishu_webhook_url)
+                        # send_alert_to_feishu(f"Check test result {platform} pass", f"https://aip.nioint.com/#/adsim/hilReplay/management/details?exec_plan_id={task_id}", case_id, platform, feishu_webhook_url)
 
-        # for platform, info in self.check_result.items():
-        #     if info["check_test_result"] == "pass":
-        #         send_alert_to_feishu(f"Check test result {platform} pass", f"https://aip.nioint.com/#/adsim/hilReplay/management/details?exec_plan_id={task_id}", case_id, platform, feishu_webhook_url)
-
-
+        for platform, info in self.check_result.items():
+            if info["check_test_result"] == "pass":
+                send_alert_to_feishu(f"Check test result {platform} pass", f"https://aip.nioint.com/#/adsim/hilReplay/management/details?exec_plan_id={task_id}", case_id, platform, feishu_webhook_url)
+            else:
+                send_alert_to_feishu(f"Check test result {platform} fail", f"https://aip.nioint.com/#/adsim/hilReplay/management/details?exec_plan_id={task_id}", case_id, platform, feishu_webhook_url)
+    
     def get_queue_host_id(self):
         for platform, info in self.env_info.items():
             queue_names = info['put_code_queue_name']
@@ -283,9 +284,9 @@ class TestCode():
                         }
                 response = requests.post(url, headers=self.headers, json=data, timeout=600)
                 if response.status_code == 200:
+                    print(f"{platform}:  Get queue host id, sucess")
                     result_data = response.json()['data']
                     for item in result_data:
-                        print(f"{platform}:  Get queue host id, sucess")
                         self.env_info[platform]["all_hosts"].append({"Name":item['Name'], "Hostname": item['Hostname'], "CodeBranch": info['code_branch']})
                 else:
                     raise Exception(f"{platform}: Get queue host id failed, status code: {response.status_code}")
@@ -298,9 +299,9 @@ class TestCode():
                     }
                 response = requests.post(url, headers=self.headers, json=data, timeout=600)
                 if response.status_code == 200:
+                    print(f"{platform}:  Get group host id, sucess")
                     result_data = response.json()['data']
                     for item in result_data:
-                        print(f"{platform}:  Get group host id, sucess")
                         self.env_info[platform]["all_hosts"].append({"Name":item['Name'], "Hostname": item['Hostname'], "CodeBranch": info['code_branch']})
                 else:
                     raise Exception(f"{platform}: Get group host id failed, status code: {response.status_code}")
@@ -309,6 +310,8 @@ class TestCode():
     def put_all_code(self):
         ## 每个台架都有一个id，我需要通过队列获取所有台架的id，然后在逐个进行推送代码
         for platform, info in self.env_info.items():
+            if info['check_test_result'] == "fail":
+                continue
             ##  host_ids = [{'ID': 179, 'Name': '10.60.4.112', 'CodeBranch': 'dev'}, {'ID': 181, 'Name': '10.60.4.111', 'CodeBranch': 'dev'}]
             if platform == "NT3_ALPS" or platform == "NT3_LEO" or platform == "NT25":
                 url = f"https://hilreplay.nioint.com/api/bench/queue/pushcode?alps={info['code_branch']}"
@@ -322,8 +325,14 @@ class TestCode():
                 timeout=3600)
             print(response.text)
             if response.status_code == 200 and json.loads(response.text).get('success'):
-                print(f"{platform}: Put code success")
+                response_data = json.loads(response.text)['result']
+                for ip, status in response_data.items():
+                    if status:
+                        print(f"{platform} {ip}: sucsess")
+                    else:
+                        print(f"{platform} {ip}: failed")
                 ## 告警
+                # send_alert_to_feishu(f"Put code {platform} success", f"https://aip.nioint.com/#/adsim/hilReplay/management/details?exec_plan_id={task_id}", case_id, platform, feishu_webhook_url)
             else:
                 raise Exception(f"{platform}: Put code failed, status code: {response.status_code}")
                 ## 告警
@@ -357,8 +366,7 @@ class TestCode():
                 self.check_result[platform]["recover_queue"] = False    
                 raise Exception(f"{platform}: Recover queue failed, status code: {response.status_code}")
 
-            
-
+        
 
 
     def check(self):
