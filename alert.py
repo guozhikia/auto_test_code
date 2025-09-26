@@ -2,62 +2,37 @@ import requests
 import json
 from datetime import datetime
 
-def send_alert_to_feishu(title, test_url, case_id, project_name, webhook_url):
+def send_alert_to_feishu(webhook_url, title, data):
     # 构建卡片消息内容
     card_elements = []
-
-    card_elements.append({
-        "tag": "div",
-        "fields": [
-            {
-                "is_short": True,
-                "text": {
-                    "content": f"**Project_name:**\n{project_name}",
-                    "tag": "lark_md"
-                }
-            },
+    for name, value in data.items():
+        if "http" in value:
+            card_elements.append({
+            "tag": "div",
+            "fields": [
                 {
-                "is_short": True,
-                "text": {
-                    "content": f"**Case id:**\n{case_id}",
-                    "tag": "lark_md"
+                    "is_short": True,
+                    "text": {
+                        "content": f"**{name} :**\n[Report]({value})",
+                        "tag": "lark_md"
+                    }
                 }
-            },
-            {
-                "is_short": True,
-                "text": {
-                    "content": f"**Replay Report Link:**\n[Report]({test_url})",
-                    "tag": "lark_md"
-                }
-            },
-        ]
-    })
-
-    # 添加分隔线
-    card_elements.append({"tag": "hr"})
-
-    # card_elements.append({
-    #     "tag": "div",
-    #     "fields": [
-    #         {
-    #             "is_short": True,
-    #             "text": {
-    #                 "content": f"**metric_name :**\n{metric_name_str}",
-    #                 "tag": "lark_md"
-    #             }
-    #         },
-    #             {
-    #             "is_short": True,
-    #             "text": {
-    #                 "content": f"<at id={user_id}></at>",
-    #                 "tag": "lark_md"
-    #             },
-    #         }
-    #     ]
-    # })
-
-    # 添加分隔线
-    card_elements.append({"tag": "hr"})
+            ]
+            })
+       
+        else:    
+            card_elements.append({
+                "tag": "div",
+                "fields": [
+                    {
+                        "is_short": True,
+                        "text": {
+                            "content": f"**{name} :**\n{value}",
+                            "tag": "lark_md"
+                        }
+                    }
+                ]
+            })
 
    # 构建整个消息
     message = {
@@ -87,4 +62,11 @@ def send_alert_to_feishu(title, test_url, case_id, project_name, webhook_url):
         print(f"告警信息发送失败，状态码：{response.status_code}")
         print(f"响应内容：{response.text}") 
 
-# send_alert_to_feishu("oom", test_url, uuid, project_name, webhook_url, metric_name_ssh_list, user_id)
+title = "TEST"
+data = {
+    "project_name": "NT2",
+    "case_id": "20240525T144500_LJ1EFAUU1NG000025",
+    "test_url": "https://aip.nioint.com/#/adsim/hilReplay/management/details?exec_plan_id=",
+}
+
+send_alert_to_feishu("https://open.feishu.cn/open-apis/bot/v2/hook/63871227-dec7-401c-bd48-23e03b82baaa", "TEST", data)

@@ -261,17 +261,21 @@ class TestCode():
                     p0_issue_v2_pass_or_fail = checkers_result["P0_issue_v2"]['error']
                     if not urban_pass_or_fail or p0_issue_v2_pass_or_fail != "":
                         self.check_result[platform]["check_test_result"] = "fail"
-                        # send_alert_to_feishu(f"Check test result {platform} failed", f"https://aip.nioint.com/#/adsim/hilReplay/management/details?exec_plan_id={task_id}", case_id, platform, feishu_webhook_url)
                         break
                     else:
                         self.check_result[platform]["check_test_result"] = "pass"
-                        # send_alert_to_feishu(f"Check test result {platform} pass", f"https://aip.nioint.com/#/adsim/hilReplay/management/details?exec_plan_id={task_id}", case_id, platform, feishu_webhook_url)
+ 
 
         for platform, info in self.check_result.items():
+            data = {
+                    "project_name": platform,
+                    "test_url": f"https://aip.nioint.com/#/adsim/hilReplay/management/details?exec_plan_id={info['send_test_task']}",
+                }
             if info["check_test_result"] == "pass":
-                send_alert_to_feishu(f"Check test result {platform} pass", f"https://aip.nioint.com/#/adsim/hilReplay/management/details?exec_plan_id={task_id}", case_id, platform, feishu_webhook_url)
+                send_alert_to_feishu(feishu_webhook_url, f"Check test result {platform} pass", data)
+
             else:
-                send_alert_to_feishu(f"Check test result {platform} fail", f"https://aip.nioint.com/#/adsim/hilReplay/management/details?exec_plan_id={task_id}", case_id, platform, feishu_webhook_url)
+                send_alert_to_feishu(feishu_webhook_url, f"Check test result {platform} fail", data)
     
     def get_queue_host_id(self):
         for platform, info in self.env_info.items():
