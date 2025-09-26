@@ -62,11 +62,11 @@ def send_alert_to_feishu(webhook_url, title, data):
         print(f"告警信息发送失败，状态码：{response.status_code}")
         print(f"响应内容：{response.text}") 
 
-title = "TEST"
-data = {
-    "project_name": "NT2",
-    "case_id": "20240525T144500_LJ1EFAUU1NG000025",
-    "test_url": "https://aip.nioint.com/#/adsim/hilReplay/management/details?exec_plan_id=",
-}
+# title = "TEST"
+# data = {
+#     "project_name": "NT2",
+#     "case_id": "20240525T144500_LJ1EFAUU1NG000025",
+#     "test_url": "https://aip.nioint.com/#/adsim/hilReplay/management/details?exec_plan_id=",
+# }
 
-send_alert_to_feishu("https://open.feishu.cn/open-apis/bot/v2/hook/63871227-dec7-401c-bd48-23e03b82baaa", "TEST", data)
+# send_alert_to_feishu("https://open.feishu.cn/open-apis/bot/v2/hook/63871227-dec7-401c-bd48-23e03b82baaa", "TEST", data)
